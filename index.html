@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#176b45">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="application-name" content="Sobha Bus Guide">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <style>
+    :root { --green:#176b45; --green2:#0f5132; --ink:#17231c; --muted:#68756d; --line:#e0e8e2; --bg:#f4f7f5; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:Arial, "Noto Sans", sans-serif; }
+    .app { max-width:650px; margin:0 auto; min-height:100vh; padding:16px 14px 28px; }
+    .header { background:linear-gradient(135deg,var(--green),var(--green2)); color:#fff; padding:18px; border-radius:20px; display:flex; gap:13px; align-items:center; box-shadow:0 7px 20px #153d281c; }
+    .logo { font-size:34px; width:54px; height:54px; border-radius:15px; background:#ffffff20; display:grid; place-items:center; flex-shrink:0; }
+    h1 { font-size:21px; margin:0 0 5px; letter-spacing:.2px; }
+    .subtitle { font-size:13px; opacity:.9; }
+    .section { margin-top:17px; }
+    .label { font-weight:700; display:block; font-size:14px; margin:0 0 9px; }
+    .languages { display:grid; grid-template-columns:repeat(5,1fr); gap:7px; }
+    button, select { font:inherit; }
+    .lang { border:1px solid var(--line); border-radius:12px; background:#fff; padding:10px 3px; font-size:12px; font-weight:700; color:var(--ink); min-height:43px; }
+    .lang.active { color:#fff; background:var(--green); border-color:var(--green); }
+    .select-wrap { position:relative; }
+    select { width:100%; padding:15px 42px 15px 14px; border:1px solid #d7e1da; border-radius:14px; background:#fff; font-size:16px; font-weight:700; color:var(--ink); appearance:none; }
+    .select-icon { position:absolute; right:15px; top:50%; transform:translateY(-50%); pointer-events:none; font-size:18px; }
+    .shift-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .shift { border:2px solid transparent; border-radius:15px; padding:13px 10px; min-height:76px; text-align:left; font-weight:800; display:flex; gap:9px; align-items:center; }
+    .shift .emoji { font-size:26px; }
+    .shift small { display:block; font-size:12px; font-weight:500; margin-top:4px; opacity:.82; }
+    .shift.day { background:#fff1cf; color:#704800; }
+    .shift.night { background:#e9ebff; color:#303a8a; }
+    .shift.active { border-color:var(--green); box-shadow:0 0 0 2px #176b4515; }
+    .result-head { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; }
+    .result-head h2 { margin:0; font-size:18px; }
+    .count { border-radius:20px; background:#e1efe6; color:#175b39; padding:5px 10px; font-size:12px; font-weight:700; white-space:nowrap; }
+    .bus-card { background:#fff; border:1px solid var(--line); border-radius:17px; padding:15px; margin-top:10px; box-shadow:0 3px 12px #1b382508; }
+    .bus-top { display:flex; align-items:center; gap:11px; }
+    .bus-icon { width:54px; height:54px; display:grid; place-items:center; border-radius:14px; background:#e8f3ec; font-size:29px; flex-shrink:0; }
+    .bus-name { font-size:19px; font-weight:800; }
+    .route-name { color:var(--muted); font-size:13px; margin-top:4px; line-height:1.4; }
+    .time { margin-left:auto; text-align:right; font-weight:800; font-size:17px; white-space:nowrap; }
+    .time small { display:block; color:var(--muted); font-size:11px; font-weight:600; margin-bottom:4px; }
+    .details { display:grid; grid-template-columns:1fr 1fr; gap:10px; border-top:1px solid #edf1ee; margin-top:14px; padding-top:13px; }
+    .detail { display:flex; gap:8px; align-items:flex-start; min-width:0; }
+    .detail .ico { font-size:20px; }
+    .detail small { display:block; color:var(--muted); font-size:11px; margin-bottom:4px; }
+    .detail strong { font-size:13px; line-height:1.35; overflow-wrap:anywhere; }
+    .empty { background:#fff; border:1px dashed #cbd8ce; border-radius:15px; padding:24px 16px; text-align:center; color:var(--muted); line-height:1.5; }
+    .note { font-size:11px; line-height:1.5; color:#68756d; margin:16px 3px 0; }
+    .footer { text-align:center; color:#87928b; font-size:11px; margin-top:18px; }
+    @media (max-width:370px) { .app{padding:11px;} .languages{gap:4px;} .lang{font-size:11px;} .time{font-size:15px;} .details{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="logo" aria-hidden="true">🚌</div>
+    <div>
+      <h1>SOBHA BUS GUIDE</h1>
+      <div class="subtitle" id="subtitle">Camp to Site Bus Information</div>
+    </div>
+  </header>
+
+  <section class="section">
+    <span class="label" id="languageLabel">🌐 Choose your language</span>
+    <div class="languages" role="group" aria-label="Choose language">
+      <button class="lang active" data-lang="en" onclick="setLanguage('en')">English</button>
+      <button class="lang" data-lang="hi" onclick="setLanguage('hi')">हिन्दी</button>
+      <button class="lang" data-lang="ta" onclick="setLanguage('ta')">தமிழ்</button>
+      <button class="lang" data-lang="te" onclick="setLanguage('te')">తెలుగు</button>
+      <button class="lang" data-lang="ml" onclick="setLanguage('ml')">മലയാളം</button>
+    </div>
+  </section>
+
+  <section class="section">
+    <label class="label" id="siteLabel" for="siteSelect">📍 Select your site</label>
+    <div class="select-wrap">
+      <select id="siteSelect" onchange="renderBuses()">
+        <option value="all">All sites</option>
+      </select>
+      <span class="select-icon">⌄</span>
+    </div>
+  </section>
+
+  <section class="section">
+    <span class="label" id="shiftLabel">🕒 Choose your shift</span>
+    <div class="shift-grid">
+      <button class="shift day active" id="dayButton" onclick="setShift('Day')">
+        <span class="emoji">☀️</span><span><span id="dayTitle">DAY SHIFT</span><small id="daySub">Morning buses</small></span>
+      </button>
+      <button class="shift night" id="nightButton" onclick="setShift('Night')">
+        <span class="emoji">🌙</span><span><span id="nightTitle">NIGHT SHIFT</span><small id="nightSub">Evening buses</small></span>
+      </button>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="result-head">
+      <h2 id="resultsTitle">🚌 Available buses</h2>
+      <span class="count" id="busCount">0 buses</span>
+    </div>
+    <div id="busList" aria-live="polite"></div>
+  </section>
+
+  <p class="note" id="demoNote">Demo information only. Confirm bus numbers, times and pickup points with the transport team before real use.</p>
+  <div class="footer">Independent demo prototype • Not an official Sobha application</div>
+</div>
+
+<script>
+const DATA = [
+  {site:"Skyview", shift:"Day", bus:"Bus 14", time:"05:30 AM", gate:"Gate 1", from:"Camp Main Gate", to:"Skyview Tower A"},
+  {site:"Skyview", shift:"Day", bus:"Bus 22", time:"05:45 AM", gate:"Gate 1", from:"Camp Main Gate", to:"Skyview Tower B"},
+  {site:"Skyview", shift:"Night", bus:"Bus 18", time:"05:30 PM", gate:"Gate 2", from:"Camp Back Gate", to:"Skyview Central"},
+  {site:"Sobha Hartland", shift:"Day", bus:"Bus 07", time:"05:40 AM", gate:"Gate 3", from:"Camp Area C", to:"Hartland Sector 1"},
+  {site:"Sobha Hartland", shift:"Night", bus:"Bus 09", time:"05:45 PM", gate:"Gate 3", from:"Camp Area C", to:"Hartland Sector 1"},
+  {site:"The Crest", shift:"Day", bus:"Bus 31", time:"06:00 AM", gate:"Gate 2", from:"Main Bay", to:"The Crest Plot 4"},
+  {site:"The Crest", shift:"Night", bus:"Bus 33", time:"06:00 PM", gate:"Gate 2", from:"Main Bay", to:"The Crest Plot 4"},
+  {site:"Creek Vistas", shift:"Day", bus:"Bus 12", time:"05:25 AM", gate:"Gate 1", from:"North Stand", to:"Creek Vistas North"},
+  {site:"Creek Vistas", shift:"Night", bus:"Bus 15", time:"05:35 PM", gate:"Gate 1", from:"North Stand", to:"Creek Vistas South"}
+];
+
+const I18N = {
+ en:{subtitle:"Camp to Site Bus Information",languageLabel:"🌐 Choose your language",siteLabel:"📍 Select your site",allSites:"All sites",shiftLabel:"🕒 Choose your shift",dayTitle:"DAY SHIFT",daySub:"Morning buses",nightTitle:"NIGHT SHIFT",nightSub:"Evening buses",resultsTitle:"🚌 Available buses",buses:"buses",bus:"bus",departure:"DEPARTURE TIME",pickup:"PICKUP GATE",route:"ROUTE",empty:"No buses found for this selection. Try another site or shift.",demoNote:"Demo information only. Confirm bus numbers, times and pickup points with the transport team before real use.",campMain:"Camp Main Gate",campBack:"Camp Back Gate",campC:"Camp Area C",mainBay:"Main Bay",northStand:"North Stand",gate:"Gate",site:"Site"},
+ hi:{subtitle:"कैंप से साइट तक बस की जानकारी",languageLabel:"🌐 अपनी भाषा चुनें",siteLabel:"📍 अपनी साइट चुनें",allSites:"सभी साइटें",shiftLabel:"🕒 अपनी शिफ्ट चुनें",dayTitle:"दिन की शिफ्ट",daySub:"सुबह की बसें",nightTitle:"रात की शिफ्ट",nightSub:"शाम की बसें",resultsTitle:"🚌 उपलब्ध बसें",buses:"बसें",bus:"बस",departure:"जाने का समय",pickup:"पिकअप गेट",route:"रूट",empty:"इस साइट और शिफ्ट के लिए बस नहीं मिली। दूसरी साइट या शिफ्ट चुनें।",demoNote:"यह केवल डेमो जानकारी है। असली इस्तेमाल से पहले बस नंबर, समय और गेट ट्रांसपोर्ट टीम से पुष्टि करें।",campMain:"कैंप मेन गेट",campBack:"कैंप बैक गेट",campC:"कैंप एरिया C",mainBay:"मेन बे",northStand:"नॉर्थ स्टैंड",gate:"गेट",site:"साइट"},
+ ta:{subtitle:"முகாமிலிருந்து தளத்திற்கான பேருந்து தகவல்",languageLabel:"🌐 உங்கள் மொழியைத் தேர்ந்தெடுக்கவும்",siteLabel:"📍 உங்கள் தளத்தைத் தேர்ந்தெடுக்கவும்",allSites:"அனைத்து தளங்களும்",shiftLabel:"🕒 உங்கள் பணிநேரத்தைத் தேர்ந்தெடுக்கவும்",dayTitle:"பகல் பணி",daySub:"காலை பேருந்துகள்",nightTitle:"இரவு பணி",nightSub:"மாலை பேருந்துகள்",resultsTitle:"🚌 கிடைக்கும் பேருந்துகள்",buses:"பேருந்துகள்",bus:"பேருந்து",departure:"புறப்படும் நேரம்",pickup:"ஏறும் வாயில்",route:"வழித்தடம்",empty:"இந்தத் தேர்வுக்கு பேருந்துகள் இல்லை. வேறு தளம் அல்லது பணிநேரத்தைத் தேர்ந்தெடுக்கவும்.",demoNote:"இது மாதிரி தகவல் மட்டுமே. பயன்படுத்துவதற்கு முன் பேருந்து எண், நேரம் மற்றும் வாயிலை போக்குவரத்துக் குழுவிடம் உறுதிப்படுத்தவும்.",campMain:"முகாம் முதன்மை வாயில்",campBack:"முகாம் பின்வாயில்",campC:"முகாம் பகுதி C",mainBay:"முதன்மை நிறுத்தம்",northStand:"வடக்கு நிறுத்தம்",gate:"வாயில்",site:"தளம்"},
+ te:{subtitle:"క్యాంప్ నుండి సైట్‌కు బస్సు సమాచారం",languageLabel:"🌐 మీ భాషను ఎంచుకోండి",siteLabel:"📍 మీ సైట్‌ను ఎంచుకోండి",allSites:"అన్ని సైట్లు",shiftLabel:"🕒 మీ షిఫ్ట్‌ను ఎంచుకోండి",dayTitle:"డే షిఫ్ట్",daySub:"ఉదయం బస్సులు",nightTitle:"నైట్ షిఫ్ట్",nightSub:"సాయంత్రం బస్సులు",resultsTitle:"🚌 అందుబాటులో ఉన్న బస్సులు",buses:"బస్సులు",bus:"బస్సు",departure:"బయలుదేరు సమయం",pickup:"పికప్ గేట్",route:"మార్గం",empty:"ఈ ఎంపికకు బస్సులు లేవు. మరో సైట్ లేదా షిఫ్ట్ ఎంచుకోండి.",demoNote:"ఇది డెమో సమాచారం మాత్రమే. ఉపయోగించే ముందు బస్సు నంబర్, సమయం, గేట్‌ను ట్రాన్స్‌పోర్ట్ టీమ్‌తో నిర్ధారించండి.",campMain:"క్యాంప్ మెయిన్ గేట్",campBack:"క్యాంప్ బ్యాక్ గేట్",campC:"క్యాంప్ ఏరియా C",mainBay:"మెయిన్ బే",northStand:"నార్త్ స్టాండ్",gate:"గేట్",site:"సైట్"},
+ ml:{subtitle:"ക്യാമ്പിൽ നിന്ന് സൈറ്റിലേക്കുള്ള ബസ് വിവരം",languageLabel:"🌐 നിങ്ങളുടെ ഭാഷ തിരഞ്ഞെടുക്കുക",siteLabel:"📍 നിങ്ങളുടെ സൈറ്റ് തിരഞ്ഞെടുക്കുക",allSites:"എല്ലാ സൈറ്റുകളും",shiftLabel:"🕒 നിങ്ങളുടെ ഷിഫ്റ്റ് തിരഞ്ഞെടുക്കുക",dayTitle:"പകൽ ഷിഫ്റ്റ്",daySub:"രാവിലെ ബസുകൾ",nightTitle:"രാത്രി ഷിഫ്റ്റ്",nightSub:"വൈകുന്നേരത്തെ ബസുകൾ",resultsTitle:"🚌 ലഭ്യമായ ബസുകൾ",buses:"ബസുകൾ",bus:"ബസ്",departure:"പുറപ്പെടുന്ന സമയം",pickup:"പിക്കപ്പ് ഗേറ്റ്",route:"റൂട്ട്",empty:"ഈ തിരഞ്ഞെടുപ്പിന് ബസുകളില്ല. മറ്റൊരു സൈറ്റോ ഷിഫ്റ്റോ തിരഞ്ഞെടുക്കുക.",demoNote:"ഇത് ഡെമോ വിവരങ്ങൾ മാത്രമാണ്. ഉപയോഗിക്കുന്നതിന് മുമ്പ് ബസ് നമ്പർ, സമയം, ഗേറ്റ് എന്നിവ ട്രാൻസ്‌പോർട്ട് ടീമുമായി സ്ഥിരീകരിക്കുക.",campMain:"ക്യാമ്പ് പ്രധാന ഗേറ്റ്",campBack:"ക്യാമ്പ് പിൻ ഗേറ്റ്",campC:"ക്യാമ്പ് ഏരിയ C",mainBay:"മെയിൻ ബേ",northStand:"നോർത്ത് സ്റ്റാൻഡ്",gate:"ഗേറ്റ്",site:"സൈറ്റ്"}
+};
+
+let currentLanguage = "en";
+let currentShift = "Day";
+
+function text(key) { return (I18N[currentLanguage] && I18N[currentLanguage][key]) || I18N.en[key] || key; }
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, function(ch) {
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch];
+  });
+}
+function translatedPlace(value) {
+  const map = {
+    "Camp Main Gate":"campMain","Camp Back Gate":"campBack","Camp Area C":"campC",
+    "Main Bay":"mainBay","North Stand":"northStand"
+  };
+  return map[value] ? text(map[value]) : value;
+}
+function translatedGate(value) {
+  const match = value.match(/^Gate\s+(.+)$/);
+  return match ? text("gate") + " " + match[1] : value;
+}
+function populateSites() {
+  const select = document.getElementById("siteSelect");
+  const current = select.value || "all";
+  const sites = [...new Set(DATA.map(item => item.site))];
+  select.innerHTML = '<option value="all">' + escapeHtml(text("allSites")) + '</option>' +
+    sites.map(site => '<option value="' + escapeHtml(site) + '">' + escapeHtml(site) + '</option>').join("");
+  select.value = sites.includes(current) ? current : "all";
+}
+function setLanguage(language) {
+  currentLanguage = language;
+  document.documentElement.lang = language;
+  document.querySelectorAll(".lang").forEach(btn => btn.classList.toggle("active", btn.dataset.lang === language));
+  document.getElementById("subtitle").textContent = text("subtitle");
+  document.getElementById("languageLabel").textContent = text("languageLabel");
+  document.getElementById("siteLabel").textContent = text("siteLabel");
+  document.getElementById("shiftLabel").textContent = text("shiftLabel");
+  document.getElementById("dayTitle").textContent = text("dayTitle");
+  document.getElementById("daySub").textContent = text("daySub");
+  document.getElementById("nightTitle").textContent = text("nightTitle");
+  document.getElementById("nightSub").textContent = text("nightSub");
+  document.getElementById("resultsTitle").textContent = text("resultsTitle");
+  document.getElementById("demoNote").textContent = text("demoNote");
+  populateSites();
+  renderBuses();
+}
+function setShift(shift) {
+  currentShift = shift;
+  document.getElementById("dayButton").classList.toggle("active", shift === "Day");
+  document.getElementById("nightButton").classList.toggle("active", shift === "Night");
+  renderBuses();
+}
+function renderBuses() {
+  const selectedSite = document.getElementById("siteSelect").value || "all";
+  const buses = DATA.filter(item => (selectedSite === "all" || item.site === selectedSite) && item.shift === currentShift);
+  document.getElementById("busCount").textContent = buses.length + " " + (buses.length === 1 ? text("bus") : text("buses"));
+  const container = document.getElementById("busList");
+  if (!buses.length) {
+    container.innerHTML = '<div class="empty">🔎 ' + escapeHtml(text("empty")) + '</div>';
+    return;
+  }
+  container.innerHTML = buses.map(item => `
+    <article class="bus-card">
+      <div class="bus-top">
+        <div class="bus-icon" aria-hidden="true">🚌</div>
+        <div>
+          <div class="bus-name">${escapeHtml(item.bus)}</div>
+          <div class="route-name">${escapeHtml(item.site)} · ${escapeHtml(item.to)}</div>
+        </div>
+        <div class="time"><small>${escapeHtml(text("departure"))}</small>⏰ ${escapeHtml(item.time)}</div>
+      </div>
+      <div class="details">
+        <div class="detail"><span class="ico" aria-hidden="true">🚪</span><div><small>${escapeHtml(text("pickup"))}</small><strong>${escapeHtml(translatedGate(item.gate))}</strong></div></div>
+        <div class="detail"><span class="ico" aria-hidden="true">📍</span><div><small>${escapeHtml(text("route"))}</small><strong>${escapeHtml(translatedPlace(item.from))} → ${escapeHtml(item.to)}</strong></div></div>
+      </div>
+    </article>`).join("");
+}
+populateSites();
+renderBuses();
+</script>
+<script>
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
